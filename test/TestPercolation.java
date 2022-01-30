@@ -13,9 +13,7 @@ public class TestPercolation {
     public void beforeClass() {
         this.p.open(1, 1);
         this.p.open(1, 3);
-
         p.open(1, 4);
-
         p.open(2, 2);
         p.open(2, 4);
         p.open(3, 3);
@@ -68,6 +66,11 @@ public class TestPercolation {
         assert (!p.isConnected(p.xyTo1D(3, 1), p.xyTo1D(1, 3)));
         assert (!p.isConnected(p.xyTo1D(4, 2), p.xyTo1D(4, 3)));
         assert (!p.isConnected(p.xyTo1D(5, 2), p.xyTo1D(1, 5)));
+    }
+
+    @Test
+    public void percolates() {
+        assert(p.percolates() == true);
     }
 
     public static void afterAll () {

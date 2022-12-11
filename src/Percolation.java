@@ -7,6 +7,7 @@ public class Percolation {
     private boolean[] openSites;
     private WeightedQuickUnionUF connectedSites;
     private int topParentId;
+    private int bottomParentId;
 
 
     /*
@@ -18,11 +19,12 @@ public class Percolation {
             throw new IllegalArgumentException("Constructor received invalid value for N");
         }
         this.gridSize = n;
-        int totalCells = n * n + 1;  // 1 cell for virtual sites
+        int totalCells = n * n + 2;  // 1 cell for virtual sites
         this.numberOfOpenSites = 0;
         this.openSites = new boolean[totalCells];
         this.connectedSites = new WeightedQuickUnionUF(totalCells);
-        this.topParentId = 0/*this.connectedSites.find(0)*/;
+        this.topParentId = 0;
+        this.bottomParentId = n * n + 1;
     }
 
     // Converts 2D coordinates to 1d.
@@ -57,6 +59,7 @@ public class Percolation {
         for (int n: neighbours) {
             if (this.isIndexValid(n) && this.openSites[n]) {
                 this.connectedSites.union(cell, n);
+//                this.topParentId = this.connectedSites.find(this.topParentId);
             }
         }
     }
@@ -79,9 +82,13 @@ public class Percolation {
             if (row == 1) {
                 this.connectedSites.union(cell, this.topParentId);
             }
+            if (row == this.gridSize) {
+                this.connectedSites.union(cell, this.bottomParentId);
+            }
             this.dfs(row, col);
         }
-
+        this.topParentId = this.connectedSites.find(this.topParentId);
+        this.bottomParentId = this.connectedSites.find(this.bottomParentId);
     }
 
     // is the site (row, col) open?
@@ -103,7 +110,7 @@ public class Percolation {
         }
         // A full site is an open site that can be cint topId = this.connectedSites.find(0);
         int el = this.xyTo1D(row, col);
-        return this.connectedSites.find(el) == this.connectedSites.find(this.topParentId);
+        return this.connectedSites.find(el) == this.topParentId;
     }
 
     // returns the number of open sites
@@ -114,13 +121,14 @@ public class Percolation {
 
     // does the system percolate =  one or few open top sites connected to one bottom
     public boolean percolates() {
-        int top = this.connectedSites.find(this.topParentId);
-        for (int i = 1; i <= this.gridSize; i++) {
-            if (this.isOpen(this.gridSize, i) && this.connectedSites.find(xyTo1D(this.gridSize, i)) == top) {
-                return true;
-            }
-        }
-        return false;
+
+//        for (int i = 1; i <= this.gridSize; i++) {
+//            if (this.isOpen(this.gridSize, i) && this.connectedSites.find(xyTo1D(this.gridSize, i)) == this.topParentId) {
+//                return true;
+//            }
+//        }
+//        return false;
+        return this.topParentId == this.bottomParentId;
     }
 
 

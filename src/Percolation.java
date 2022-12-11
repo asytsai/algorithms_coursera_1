@@ -1,175 +1,157 @@
-import edu.princeton.cs.algs4.StdIn;
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
+
 public class Percolation {
-
-    private int size;  //grid size
+    private int gridSize;
     private int numberOfOpenSites;
-    private boolean[] openSites; //keeps track of open sites
-    private WeightedQuickUnionUF connectedSites; //which sites are connected
-
-
-
-     /*
-    ========================= Private methods ===================
-     */
-
-
-    public int xyTo1D(int n, int k) {
-        // Converts 2-dim to 1-dim of range 0 to n-1
-        return this.size * (n - 1) + k - 1;
-    }
-
-    public Boolean isIndexValid(int idx) {
-        // Tests 1-dim input: valid from 0 to n*n and if it's a corner case (should not be joined)
-        // (1, 1) -> 0
-        return idx >= 0 && idx < this.size * this.size;
-    }
-
-    public Boolean canConnect(int idx) {
-        // Tests 1-dim input:  if it's a corner case (should not be joined)
-        // (1, 1) -> 0
-        return !(idx % this.size == 0 || idx % this.size == (this.size - 1));
-    }
-
-    public Boolean isConnected(int idx1, int idx2) {
-        return this.connectedSites.find(idx1+ this.size) == this.connectedSites.find(idx2+ this.size);
-    }
-
-    private Boolean isSiteOpen(int idx) {
-        return this.openSites[idx];
-    }
-
-    private void openVirtualSite() {
-        for (int i=0; i < this.size; i++) {
-            this.connectedSites.union(i, i + 1);
-            int bottom = this.size + i;
-            if (this.isSiteOpen(bottom)) {
-                this.connectedSites.union(i, bottom );
-            }
-        }
-        System.out.println(this.connectedSites.find(0) == this.connectedSites.find(this.size-1));
-    }
-
-    private void openSiteAndConnect(int site, int neighbor) {
-        if ( this.isSiteOpen(neighbor) ) {
-            System.out.printf("Connecting %d to %d\n", site, neighbor);
-            this.connectedSites.union(site+ this.size, neighbor+ this.size);
-            System.out.println("Is connected? "+ this.isConnected(site, neighbor) + "\n");
-        }
-    }
+    private boolean[] openSites;
+    private WeightedQuickUnionUF connectedSites;
+    private int topParentId;
 
 
     /*
-    ========================= Public methods ===================
+    Creates n-by-n grid, with all sites initially blocked.
+    Implementation has top and bottom rows reserved for virtual sites.
      */
-
-    // creates n-by-n grid, with all sites initially blocked
     public Percolation(int n) {
         if (n <= 0) {
-            throw new IndexOutOfBoundsException("row index i out of bounds");
+            throw new IllegalArgumentException("Constructor received invalid value for N");
         }
-        this.size = n;
+        this.gridSize = n;
+        int totalCells = n * n + 1;  // 1 cell for virtual sites
         this.numberOfOpenSites = 0;
-        this.openSites = new boolean[n*n];
-        // 1 extra row for virtual top site
-        this.connectedSites = new WeightedQuickUnionUF((n + 1) * n);
+        this.openSites = new boolean[totalCells];
+        this.connectedSites = new WeightedQuickUnionUF(totalCells);
+        this.topParentId = 0/*this.connectedSites.find(0)*/;
     }
+
+    // Converts 2D coordinates to 1d.
+    // Returns coordinates within a one-dimensional array if two-dimensional coordinates are valid.
+    // Otherwise, return -1;
+    private int xyTo1D(int x, int y) {
+        if (!isIndexValid(x, y)) {
+            return -1;
+        }
+        int cell = this.gridSize * (x - 1) + y;
+        return cell;
+    }
+
+    // Performs validation of index: min is 1, max is gridSize.
+    private boolean isIndexValid(int x, int y) {
+        return x > 0 && x <= this.gridSize && y > 0 && y <= this.gridSize;
+    }
+
+    private boolean isIndexValid(int idx) {
+        return idx > 0 && idx <= this.gridSize * this.gridSize;
+    }
+
+    private void dfs(int row, int col) {
+        int cell = this.xyTo1D(row, col);
+
+        int top = this.xyTo1D(row-1, col);
+        int bottom = this.xyTo1D(row+1, col);
+        int left = this.xyTo1D(row, col - 1);
+        int right = this.xyTo1D(row, col + 1);
+
+        int[] neighbours = new int[] {top, bottom, left, right};
+        for (int n: neighbours) {
+            if (this.isIndexValid(n) && this.openSites[n]) {
+                this.connectedSites.union(cell, n);
+            }
+        }
+    }
+
+
+/*
+========================= Public methods ===================
+ */
+
 
     // opens the site (row, col) if it is not open already
     public void open(int row, int col) {
+        if (!this.isIndexValid(row, col)) {
+            throw new IllegalArgumentException("Trying to open a site: row or column invalid");
+        }
         int cell = this.xyTo1D(row, col);
-        if (!this.isIndexValid(cell) ) {
-            return;
+        if (!this.openSites[cell]) {
+            this.openSites[cell] = true;
+            this.numberOfOpenSites++;
+            if (row == 1) {
+                this.connectedSites.union(cell, this.topParentId);
+            }
+            this.dfs(row, col);
         }
-        this.openSites[cell] = true ;  // 1 is true, 0 is false
-        this.numberOfOpenSites++;
-
-        int top = this.xyTo1D(row-1, col);
-        if (this.isIndexValid(top)) {
-            this.openSiteAndConnect(cell, top);
-        }
-        int bottom = this.xyTo1D(row+1, col);
-        if (this.isIndexValid(bottom)) {
-            this.openSiteAndConnect(cell, bottom);
-        }
-        // Handling corner cells that can't be connected
-        int left = this.xyTo1D(row, col-1);
-        if (this.isIndexValid(left) && this.canConnect(left)) {
-            this.openSiteAndConnect(cell, left);
-        }
-        int right = this.xyTo1D(row, col+1);
-        if (this.isIndexValid(right) && this.canConnect(right)) {
-            this.openSiteAndConnect(cell, right);
-        }
-
-        // if sites are fully open - need to mark them fully open recursively somehow https://www.coursera.org/learn/algorithms-part1/discussions/forums/8i0LoDcjEeaibQryEY-vTQ/threads/b_PB8frWEeaBJRJ6cGwgrA
-
-
 
     }
 
     // is the site (row, col) open?
     public boolean isOpen(int row, int col) {
-        if (row > this.size || row <= 0 || col > this.size || col <= 0) {
-            throw new IllegalArgumentException();
+        if (row > this.gridSize || row < 1 || col > this.gridSize || col < 1) {
+            throw new IllegalArgumentException("IsOpen() method: row or column invalid");
         }
-        return isSiteOpen(this.xyTo1D(row, col));
+        return this.openSites[this.xyTo1D(row, col)];
+
     }
 
     // is the site (row, col) full? way to check if a site is full is to check if it's opened and connected to the top virtual site.
     public boolean isFull(int row, int col) {
-        if (row > this.size || row < 0 || col > this.size || col < 0) {
+        if (row > this.gridSize || row  < 1 || col > this.gridSize || col < 1) {
             throw new IllegalArgumentException();
         }
-        // A full site is an open site that can be connected to an open site in the top row via a chain of neighboring (left, right, up, down) open sites.
-        return false;
+        if (!this.isOpen(row, col)) {
+            return false;
+        }
+        // A full site is an open site that can be cint topId = this.connectedSites.find(0);
+        int el = this.xyTo1D(row, col);
+        return this.connectedSites.find(el) == this.connectedSites.find(this.topParentId);
     }
 
     // returns the number of open sites
     public int numberOfOpenSites() {
         return this.numberOfOpenSites;
     }
-    //new IndexOutOfBoundsException("row index i out of bounds");
+    // new IndexOutOfBoundsException("row index i out of bounds");
 
     // does the system percolate =  one or few open top sites connected to one bottom
     public boolean percolates() {
-        this.openVirtualSite();
-        return true;
-
-    }
-
-    public String toString() {
-        StringBuilder result = new StringBuilder();
-        for (boolean  i: this.openSites) result.append(i + " ");
-        result.append("\n");
-        for (int k=1; k <= this.size; k++) {
-            result.append(this.connectedSites.find(k) + " ");
+        int top = this.connectedSites.find(this.topParentId);
+        for (int i = 1; i <= this.gridSize; i++) {
+            if (this.isOpen(this.gridSize, i) && this.connectedSites.find(xyTo1D(this.gridSize, i)) == top) {
+                return true;
+            }
         }
-        result.append("\n");
-        return result.toString();
+        return false;
     }
 
-    public static void main(String[] args) {
-        Percolation p = new Percolation(5);
-        p.open(1, 1);
-        p.open(1, 3);
-        p.open(1, 4);
-        p.open(2, 2);
-        p.open(2, 4);
-        p.open(3, 3);
-        p.open(3, 4);
-        p.open(3, 5);
-        p.open(4, 1);
-        p.open(4, 5);
-        p.open(5, 2);
-        p.open(5, 4);
-        p.open(5, 5);
 
-        p.percolates();
-    }
+//    public static void main(String[] args) {
+//        Percolation p2 = new Percolation(2);
+//        p2.open(1, 1);
+//        p2.open(1, 2);
+//        p2.open(2, 2);
+//        System.out.println(p2.numberOfOpenSites());
+//        System.out.println(p2.isFull(1, 1));
+//        System.out.println(p2.isFull(2, 1));
+//        System.out.println(p2.percolates());
+//
+//
+//        Percolation p3 = new Percolation(2);
+//        p3.open(1, 1);
+//
+//        System.out.println(p3.numberOfOpenSites());
+//        System.out.println(p3.percolates());
+//
+//
+//        Percolation p4 = new Percolation(2);
+//        p4.open(1, 1);
+//        p4.open(2, 1);
+//        System.out.println(p4.numberOfOpenSites());
+//        System.out.println(p4.percolates());
+//    }
+
+
+
 
 
 
 }
-

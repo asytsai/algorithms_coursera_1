@@ -41,17 +41,6 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         this.size++;
     }
 
-    private void remove(int idx) {
-        Item[] copy = (Item[]) new Object[size * 2];
-        int newIdx = 0;
-        for (int i = 0; i < idx; i++, newIdx++) {
-            copy[newIdx] = queue[i];
-        }
-        for (int i = idx + 1; i < size; i++, newIdx++) {
-            copy[newIdx] = queue[i];
-        }
-        this.queue = copy;
-    }
 
     public Item dequeue() {
         if (this.size == 0) {
@@ -59,8 +48,19 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         }
         int idx = StdRandom.uniformInt(this.size);
         Item item = this.queue[idx];
-        this.remove(idx);
+        queue[idx] = queue[size-1];
+        queue[size-1] = null;
         this.size--;
+
+        if (size * 4 == queue.length) {
+            Item[] copy = (Item[]) new Object[size * 2];
+            for (int i = 0; i < size; i++) {
+                copy[i] = queue[i];
+            }
+            this.queue = copy;
+        }
+
+
         return item;
     }
 
@@ -78,10 +78,21 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     }
 
     private class RandomItemIterator implements Iterator<Item> {
-        private boolean[] visited = new boolean[size];
+//        private boolean[] visited = new boolean[size];
         private int nVisited = 0;
+        private Item[] q = (Item[]) new Object[size];
+
+
+        private RandomItemIterator() {
+            for (int i=0; i < size; i++) {
+                q[i] = queue[i];
+            }
+            StdRandom.shuffle(q);
+        }
+
 
         public boolean hasNext() {
+
             return nVisited < size;
         }
 
@@ -89,15 +100,16 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             if (nVisited == size) {
                 throw new NoSuchElementException();
             }
-            int curr = StdRandom.uniformInt(size);
-
-            while (visited[curr]) {
-                curr = StdRandom.uniformInt(size);
-            }
-
-            visited[curr] = true;
-            nVisited++;
-            return queue[curr];
+//            int curr = StdRandom.uniformInt(size);
+//
+//            while (visited[curr]) {
+//                curr = StdRandom.uniformInt(size);
+//            }
+//
+//            visited[curr] = true;
+//            nVisited++;
+//            return queue[curr];
+            return q[nVisited++];
         }
 
         public void remove() {

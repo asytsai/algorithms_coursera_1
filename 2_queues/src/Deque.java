@@ -153,8 +153,6 @@ public class Deque<Item> implements Iterable<Item> {
         } else if (size == 2) {
             if (first.next != last) return false;
             if (last.prev != first) return false;
-//            if (last.prev == null) return false;
-//            if (first.next == null) return false;
         } else {
             if (first == null) return false;
             if (last == null) return false;
@@ -175,7 +173,7 @@ public class Deque<Item> implements Iterable<Item> {
 
 
         Deque<Integer> deque = new Deque<>();
-        deque.isEmpty();
+        // deque.isEmpty();
         deque.addFirst(3);
         deque.removeLast();
 

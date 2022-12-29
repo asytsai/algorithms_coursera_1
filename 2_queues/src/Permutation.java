@@ -14,14 +14,11 @@ public class Permutation {
              String ch = StdIn.readString();
              rq.enqueue(ch);
          }
-         Iterator<String> it = rq.iterator();
-         while (it.hasNext()) {
-             StdOut.print(it.next() + "\n");
-         }
-
-
+        final Iterator<String> it = rq.iterator();
          for (int i = 0; i < k; i++) {
-             StdOut.print(rq.sample());
+             if (it.hasNext()) {
+                 StdOut.println(it.next());
+             }
          }
 
     }

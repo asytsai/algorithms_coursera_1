@@ -23,16 +23,14 @@ public class Tests {
         assertEquals(d.size(), 4);
 
 
-        Iterator it = d.iterator();
-        assertEquals(it.next(), "New First");
-        assertEquals(it.next(), "First");
-        assertEquals(it.next(), "Last");
-        assertEquals(it.next(), "New Last");
-        assertFalse(it.hasNext());
+        final Iterator<String> it1 = d.iterator();
+        assertEquals(it1.next(), "New First");
+        assertEquals(it1.next(), "First");
+        assertEquals(it1.next(), "Last");
+        assertEquals(it1.next(), "New Last");
+        assertFalse(it1.hasNext());
 
-        assertThrows(UnsupportedOperationException.class, ()-> it.remove());
-
-
+        assertThrows(UnsupportedOperationException.class, ()-> it1.remove());
     }
 
     @Test
@@ -51,7 +49,7 @@ public class Tests {
         rq.dequeue();
         assertEquals(rq.size(), n-1);
 
-        Iterator it = rq.iterator();
+        final Iterator it = rq.iterator();
         assertThrows(UnsupportedOperationException.class, ()-> it.remove());
 
         for (int j=0; j + 1 < n; j++) {
@@ -78,9 +76,44 @@ public class Tests {
 
         while (it.hasNext()) {
             System.out.println(it.next());
-
         }
+    }
 
+    @Test
+    public void testRandomizedDeque() {
+        RandomizedQueue<Integer> queue = new RandomizedQueue<>();
+        assertTrue(queue.isEmpty());
+        queue.enqueue(57);
+        queue.enqueue(924);
+        assertNotNull(queue.dequeue());
+        assertNotNull(queue.dequeue());
+    }
 
+    @Test
+    public void testRandomizedIsRamdom() {
+        RandomizedQueue<Integer> queue = new RandomizedQueue<>();
+        assertTrue(queue.isEmpty());
+        queue.enqueue(1);
+        queue.enqueue(2);
+        queue.enqueue(3);
+        queue.enqueue(4);
+        queue.enqueue(5);
+        queue.enqueue(6);
+        queue.enqueue(7);
+        queue.enqueue(8);
+        queue.enqueue(9);
+        queue.enqueue(10);
+        String res1 = "";
+        String res2 = "";
+        Iterator<Integer> it1 = queue.iterator();
+        Iterator<Integer> it2 = queue.iterator();
+        while (it1.hasNext()) {
+            res1 += it1.next();
+        }
+        while (it2.hasNext()) {
+            res2 += it2.next();
+        }
+        System.out.println(res1 + " " + res2);
+        assertNotEquals(res1, res2);
     }
 }

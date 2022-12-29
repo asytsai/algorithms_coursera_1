@@ -2,6 +2,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import edu.princeton.cs.algs4.StdRandom;
 
+
 public class RandomizedQueue<Item> implements Iterable<Item> {
     private static final int INIT_CAPACITY = 10;
     private Item[] queue;
@@ -40,14 +41,14 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         this.size++;
     }
 
-    private void resizeAndRemove(int capacity, int idx) {
-        assert capacity >= size;
-        Item[] copy = (Item[]) new Object[capacity];
-        for (int i = 0; i < idx; i++) {
-            copy[i] = queue[i];
+    private void remove(int idx) {
+        Item[] copy = (Item[]) new Object[size * 2];
+        int newIdx = 0;
+        for (int i = 0; i < idx; i++, newIdx++) {
+            copy[newIdx] = queue[i];
         }
-        for (int i = idx + 1; i < size; i++) {
-            copy[i] = queue[i];
+        for (int i = idx + 1; i < size; i++, newIdx++) {
+            copy[newIdx] = queue[i];
         }
         this.queue = copy;
     }
@@ -58,11 +59,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         }
         int idx = StdRandom.uniformInt(this.size);
         Item item = this.queue[idx];
-        if (this.size * 4 == this.queue.length) {
-            resizeAndRemove(this.queue.length / 2, idx);
-        } else {
-            resizeAndRemove(this.queue.length, idx);
-        }
+        this.remove(idx);
         this.size--;
         return item;
     }
@@ -81,20 +78,26 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     }
 
     private class RandomItemIterator implements Iterator<Item> {
-        private int curr = 0;
+        private boolean[] visited = new boolean[size];
+        private int nVisited = 0;
 
         public boolean hasNext() {
-            return curr < size;
+            return nVisited < size;
         }
 
         public Item next() {
-            if (queue[curr] == null) {
+            if (nVisited == size) {
                 throw new NoSuchElementException();
             }
-//            Item item = queue[curr];
-//            curr++;
-//            return item;
-            return queue[curr++];
+            int curr = StdRandom.uniformInt(size);
+
+            while (visited[curr]) {
+                curr = StdRandom.uniformInt(size);
+            }
+
+            visited[curr] = true;
+            nVisited++;
+            return queue[curr];
         }
 
         public void remove() {
@@ -104,6 +107,15 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
 
     public static void main(String[] args) {
+
+        RandomizedQueue<Integer> queue = new RandomizedQueue<>();
+        System.out.println(queue.isEmpty());
+        queue.enqueue(57);
+        queue.enqueue(924);
+        System.out.println(queue.dequeue());
+        System.out.println(queue.dequeue());
+
+
 //        RandomizedQueue<Integer> rq = new RandomizedQueue<Integer>();
 //        System.out.println(rq.isEmpty());
 //        System.out.println(rq.size());
@@ -123,20 +135,20 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 //        }
 
 
-        RandomizedQueue<Integer> queue = new RandomizedQueue<>();
-        queue.enqueue(27);
-        queue.enqueue(41);
-        queue.enqueue(26);
-        queue.enqueue(23);
-        queue.enqueue(1);
-        queue.enqueue(35);
-        queue.enqueue(13);
-        queue.enqueue(38);
-        queue.enqueue(43);
-        Iterator<Integer> it = queue.iterator();
-        while (it.hasNext()) {
-            System.out.println(it.next());
-        }
+//        RandomizedQueue<Integer> queue = new RandomizedQueue<>();
+//        queue.enqueue(27);
+//        queue.enqueue(41);
+//        queue.enqueue(26);
+//        queue.enqueue(23);
+//        queue.enqueue(1);
+//        queue.enqueue(35);
+//        queue.enqueue(13);
+//        queue.enqueue(38);
+//        queue.enqueue(43);
+//        Iterator<Integer> it = queue.iterator();
+//        while (it.hasNext()) {
+//            System.out.println(it.next());
+//        }
 
     }
 }

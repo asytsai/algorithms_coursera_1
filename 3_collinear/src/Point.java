@@ -1,15 +1,9 @@
 import java.util.Comparator;
 import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.StdIn;
 
 public class Point implements Comparable<Point> {
     private final int x;     // x-coordinate of this point
     private final int y;     // y-coordinate of this point
-    private final double POSITIVE_ZERO = 0d;
-    private final double NEGATIVE_ZERO = -0d;
-    private final double POSITIVE_INFINITY = Double.POSITIVE_INFINITY;
-    private final double NEGATIVE_INFINITY = Double.NEGATIVE_INFINITY;
-    public static final double EPSILON = 0.000001d;
 
     /**
      * Initializes a new point.
@@ -55,20 +49,19 @@ public class Point implements Comparable<Point> {
      */
     public double slopeTo(Point that) {
         /* YOUR CODE HERE */
-        if (this == that) {
-            return NEGATIVE_INFINITY;
+        if (this == that || (this.x == that.x && this.y == that.y)) {
+            return Double.NEGATIVE_INFINITY;
         }
 
         double num = this.y - that.y;
         if (num == 0) {
-            return POSITIVE_ZERO;
+            return 0d;
         }
         double denom = this.x - that.x;
-        if (Math.abs(denom - 0d) < EPSILON) {
-            return POSITIVE_INFINITY;
+        if (Math.abs(denom) == 0d) {
+            return Double.POSITIVE_INFINITY;
         }
         double slope = num / denom;
-        System.out.println("SlopeTo: "+ slope);
         return slope;
     }
 
@@ -85,19 +78,11 @@ public class Point implements Comparable<Point> {
      * argument point
      */
     public int compareTo(Point that) {
-        /* YOUR CODE HERE */
-        if (this.y  < that.y) {
-            return -1;
-        } else if (this.y > that.y) {
-            return 1;
+        int onY = Integer.compare(this.y, that.y);
+        if (onY == 0) {
+            return Integer.compare(this.x, that.x);
         } else {
-            if ( this.x < that.x) {
-                return -1;
-            } else if (this.x > that.x) {
-                return 1;
-            } else{
-                return 0;
-            }
+            return onY;
         }
     }
 
@@ -112,8 +97,7 @@ public class Point implements Comparable<Point> {
         return new SlopeOrder();
     }
 
-    private class SlopeOrder  implements Comparator<Point> {
-
+    private class SlopeOrder implements Comparator<Point> {
         public int compare(Point p1, Point p2) {
             double dist1 = slopeTo(p1);
             double dist2 = slopeTo(p2);
@@ -136,19 +120,4 @@ public class Point implements Comparable<Point> {
         return "(" + x + ", " + y + ")";
     }
 
-    /**
-     * Unit tests the Point data type.
-     */
-    public static void main(String[] args) {
-        int N = StdIn.readInt();
-        Point[] points = new Point[N];
-
-        int idx = 0;
-        while (!StdIn.isEmpty()) {
-            int x = StdIn.readInt();
-            int y = StdIn.readInt();
-            points[idx] = new Point(x, y);
-            idx++;
-        }
-    }
 }

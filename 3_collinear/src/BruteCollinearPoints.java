@@ -1,13 +1,10 @@
-import javax.sound.sampled.Line;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 public class BruteCollinearPoints {
-    private ArrayList<LineSegment> segments = new ArrayList<>();
-    private ArrayList<Point> sortedPoints = new ArrayList<>();
+    private ArrayList<ArrayList<Point>> segments = new ArrayList<>();
     private Point[] points;
+    private LineSegment[] lineSegments;
 
     /*
     Finds all line segments containing 4 points
@@ -32,114 +29,68 @@ public class BruteCollinearPoints {
                     Point temp = this.points[j];
                     this.points[j] = p;
                     this.points[j+1] = temp;
-                } else{
+                } else {
                     break;
                 }
             }
         }
-        for (Point s: this.points) {
-            System.out.println(s);
-        }
-        this.segments();
+        this.createSegments();
     }
 
+    /*
+       Creates 4-point segments of collinear points
+        */
+    private void createSegments() {
+        int n = this.points.length;
 
-//    private void sort() {
-//        Point[] aux = new Point[this.points.length];
-//        mergeSort(this.points, aux, 0, this.points.length - 1);
-//    }
-//    private void mergeSort(Point[] arr, Point[] aux, int lo, int hi) {
-//        if (hi <= lo) return;
-//        int mid = lo + (hi - lo) / 2;
-//        mergeSort(arr, aux, lo, mid);
-//        mergeSort(arr, aux, mid+1, hi);
-//        merge(arr, aux, lo, mid, hi);
-//
-//    }
-//
-//    private void merge(Point[] arr, Point[] aux, int lo, int mid, int hi) throws IllegalArgumentException {
-//        int i = lo, j = mid+1;
-//        for (int k = lo; k <= hi; k++) {
-//            aux[k] = arr[k];
-//        }
-//        for (int k = lo; k <= hi; k++) {
-//            if (arr[i].compareTo(arr[mid]) == 0)  throw new IllegalArgumentException();
-//            else if (arr[i].compareTo(arr[mid]) > 0) arr[k] = aux[j++];
-//            else if (arr[j].compareTo(arr[hi]) > 0) arr[k] = aux[i++];
-//            else if (aux[j].compareTo(aux[i]) < 0) arr[k] = aux[j++];
-//            else arr[k] = aux[i++];
-//        }
-//
-//    }
+        for (int p = 0; p < n; p++) {
+            Point p1 = this.points[p];
+
+            for (int q = p + 1; q < n; q++) {
+                Point p2 = this.points[q];
+
+                for (int r = q + 1; r < n; r++) {
+                    Point p3 = this.points[r];
+
+                    for (int s = r + 1; s < n; s++) {
+                        Point p4 = this.points[s];
+                        double slope1 = p1.slopeTo(p2);
+                        double slope2 = p2.slopeTo(p3);
+                        double slope3 = p3.slopeTo(p4);
+
+                        if (Double.compare(slope1, slope2) == 0.0 && Double.compare(slope1, slope3) == 0.0) {
+                            ArrayList<Point> segmentPoints = new ArrayList<>();
+                            segmentPoints.add(p1);
+                            segmentPoints.add(p2);
+                            segmentPoints.add(p3);
+                            segmentPoints.add(p4);
+                            this.segments.add(segmentPoints);
+                        }
+                    }
+                }
+            }
+        }
+        this.lineSegments = new LineSegment[segments.size()];
+        for (int is = 0; is < segments.size(); is++) {
+            ArrayList<Point> segment = segments.get(is);
+            LineSegment line = new LineSegment(segment.get(0), segment.get(segment.size()-1));
+            this.lineSegments[is] = line;
+        }
+    }
 
     /*
-    The number of line segments
+    Returns the number of line segments
      */
     public int numberOfSegments() {
         return segments.size();
     }
 
+
     /*
-    Generates line segments for the array of points by processing 4 at a time.
+    Generates line segments for the array of segments
      */
     public LineSegment[] segments() {
-        int N = this.points.length;
-
-        for (int p = 0; p < N-3; p++) {
-            for (int q = p + 1; q < N-2; q++) {
-                double slope1 = this.points[p].slopeTo(this.points[q]);
-                for (int r = q + 1; r < N-1; r++) {
-                    double slope2 = this.points[q].slopeTo(this.points[r]);
-                    if (Math.abs(slope2 - slope1) >= 0.000001d) {
-                        break;
-                    }
-                    for (int s = r + 1; s < N; s++) {
-                        double slope3 = this.points[r].slopeTo(this.points[s]);
-                        if (Math.abs(slope3 - slope2) >= 0.000001d) {
-                            break;
-                        }
-                        LineSegment l = new LineSegment(this.points[p], this.points[s]);
-                        this.segments.add(l);
-                    }
-                }
-            }
-        }
-//        ArrayList<Point> seen = new ArrayList<>();
-//        for (int p = 0; p < N-3; p++) {
-//            ArrayList<Point> segmentPoints = new ArrayList<>();
-//            Point point1 = this.points[p];
-//            segmentPoints.add(point1);
-//
-//            double slope = this.points[p].slopeTo(this.points[p+1]);
-//            for (int q = p + 2; q < N; q++) {
-//                Point point2 = this.points[q];
-//                double slope2 = point1.slopeTo(point2);
-//                if (Math.abs(slope2 - slope) < 0.000001d) {
-//                        segmentPoints.add(point2);
-//                }
-//            }
-//            if (segmentPoints.size() < 2) {
-//                continue;
-//            }
-//            Point start = segmentPoints.get(0);
-//            Point end = segmentPoints.get(segmentPoints.size()-1);
-//            if (!seen.contains(start) && !seen.contains(end)) {
-//                LineSegment l = new LineSegment(start, end);
-//                this.segments.add(l);
-//            }
-//            seen.addAll(segmentPoints);
-//
-//        }
-
-
-
-
-        LineSegment[] ls = new LineSegment[segments.size()];
-        for (int is = 0; is < segments.size(); is++) {
-            ls[is] = segments.get(is);
-            System.out.println(segments.get(is));
-        }
-        return ls;
-
+        return this.lineSegments;
     }
+
 }

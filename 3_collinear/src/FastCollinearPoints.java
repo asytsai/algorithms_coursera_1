@@ -1,11 +1,11 @@
-import edu.princeton.cs.algs4.In;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class FastCollinearPoints {
-    private ArrayList<LineSegment> segments = new ArrayList<>();
+    private ArrayList<ArrayList<Point>> segments = new ArrayList<>();
     private Point[] points;
+    private LineSegment[] lineSegments;
 
     /*
     Finds all line segments of collinear points
@@ -27,132 +27,129 @@ public class FastCollinearPoints {
                 if (comparison == 0) {
                     throw new IllegalArgumentException();
                 }
-//                else if (comparison < 0) {
-//                    Point temp = this.points[j];
-//                    this.points[j] = p;
-//                    this.points[j+1] = temp;
-//                } else{
-//                    break;
-//                }
             }
         }
-        for (Point s: this.points) {
-            System.out.println(s);
-        }
-        this.segments();
+
+//        this.segments();
+        this.createSegments();
     }
 
+    private void mergeSort(ArrayList<Point> arr) {
+        ArrayList<Point> aux = new ArrayList<Point>(arr.size());
+        for (int k = 0; k <= arr.size(); k++) {
+            aux.add(null);
+        }
+        this.sort(arr, aux, 0, arr.size() - 1);
+    }
 
-//    private void sort() {
-//        Point[] aux = new Point[this.points.length];
-//        mergeSort(this.points, aux, 0, this.points.length - 1);
-//    }
-//    private void mergeSort(Point[] arr, Point[] aux, int lo, int hi) {
-//        if (hi <= lo) return;
-//        int mid = lo + (hi - lo) / 2;
-//        mergeSort(arr, aux, lo, mid);
-//        mergeSort(arr, aux, mid+1, hi);
-//        merge(arr, aux, lo, mid, hi);
-//
-//    }
-//
-//    private void merge(Point[] arr, Point[] aux, int lo, int mid, int hi) throws IllegalArgumentException {
-//        int i = lo, j = mid+1;
-//        for (int k = lo; k <= hi; k++) {
-//            aux[k] = arr[k];
-//        }
-//        for (int k = lo; k <= hi; k++) {
-//            if (arr[i].compareTo(arr[mid]) == 0)  throw new IllegalArgumentException();
-//            else if (arr[i].compareTo(arr[mid]) > 0) arr[k] = aux[j++];
-//            else if (arr[j].compareTo(arr[hi]) > 0) arr[k] = aux[i++];
-//            else if (aux[j].compareTo(aux[i]) < 0) arr[k] = aux[j++];
-//            else arr[k] = aux[i++];
-//        }
-//
-//    }
+    private void sort(ArrayList<Point> arr, ArrayList<Point> aux, int lo, int hi) {
+        if (hi <= lo) return;
+        int mid = lo + (hi - lo) / 2;
+        sort(arr, aux, lo, mid);
+        sort(arr, aux, mid+1, hi);
+        merge(arr, aux, lo, mid, hi);
+    }
+
+    private void merge(ArrayList<Point> arr, ArrayList<Point> aux, int lo, int mid, int hi) {
+        int i = lo, j = mid+1;
+        for (int k = lo; k <= hi; k++) {
+            aux.set(k, arr.get(k));
+        }
+        for (int k = lo; k <= hi; k++) {
+            if (i > mid) arr.set(k, aux.get(j++));
+            else if (j > hi) arr.set(k, aux.get(i++));
+            else if (aux.get(j).compareTo(aux.get(i)) < 0) arr.set(k, aux.get(j++));
+            else arr.set(k, aux.get(i++));
+        }
+
+    }
+
+private void createSegments() {
+    int n = this.points.length;
+    ArrayList<Point> sourcePoints = new ArrayList<>();
+
+    for (int p = 0; p < n-2; p++) {
+        Point point = this.points[p];
+
+        sourcePoints.addAll(Arrays.asList(this.points));
+        sourcePoints.sort(this.points[p].slopeOrder());
+        ArrayList<Point> pointsWithTheSameSlope = new ArrayList<>();
+        pointsWithTheSameSlope.add(point);
+//            System.out.println("Slope to point " + point1);
+        double slope = point.slopeTo(this.points[p+1]);
+
+        int nextIdx = 1;
+        Point nextPoint = null;
+        //boolean slopeSeen = false;
+        while (nextIdx < n - 1) {
+            nextPoint = sourcePoints.get(nextIdx);
+            Double slope2 = point.slopeTo(nextPoint);
+            if (Double.compare(slope2, slope) == 0) {
+                //slopeSeen = true;
+                pointsWithTheSameSlope.add(nextPoint);
+//            } else if (slopeSeen) {
+//                break;
+            }
+            nextIdx++;
+
+        }
+        if (pointsWithTheSameSlope.size() > 3 &&
+                pointsWithTheSameSlope.get(0).compareTo(pointsWithTheSameSlope.get(1)) < 0) {
+            this.mergeSort(pointsWithTheSameSlope);
+            segments.add(pointsWithTheSameSlope);
+//            System.out.println("After sort");
+//            System.out.println(pointsWithTheSameSlope);
+
+            }
+            sourcePoints.clear();
+        }
+
+        this.lineSegments = new LineSegment[segments.size()];
+        System.out.println("Printing segments");
+        for (int is = 0; is < segments.size(); is++) {
+            System.out.println(segments.get(is));
+            LineSegment line = new LineSegment(segments.get(is).get(0), segments.get(is).get(segments.get(is).size()-1));
+            this.lineSegments[is] = line;
+    //            System.out.println(segments.get(is));
+        }
+    }
 
     /*
     The number of line segments
      */
     public int numberOfSegments() {
+        for (LineSegment ls: this.lineSegments) {
+            System.out.println(ls);
+        }
         return segments.size();
     }
 
-    private Point[] findMinMaxPoint(ArrayList<Point> array) {
-        System.out.println(array);
-        Point min = new Point(Integer.MAX_VALUE, Integer.MAX_VALUE);
-        Point max = new Point(Integer.MIN_VALUE, Integer.MIN_VALUE);
-        for (Point p: array) {
-            if (p.compareTo(min) < 0) {
-                min = p;
-            }
-            if (p.compareTo(max) > 0) {
-                max = p;
-            }
-        }
-        return new Point[]{min, max};
-    }
+//    private Point findMinPoint(ArrayList<Point> array) {
+////        System.out.println(array);
+//        Point min = new Point(Integer.MAX_VALUE, Integer.MAX_VALUE);
+//        for (Point p: array) {
+//            if (p.compareTo(min) < 0) {
+//                min = p;
+//            }
+//        }
+//        return min;
+//    }
+//
+//    private Point findMaxPoint(ArrayList<Point> array) {
+//        Point max = new Point(Integer.MIN_VALUE, Integer.MIN_VALUE);
+//        for (Point p: array) {
+//            if (p.compareTo(max) > 0) {
+//                max = p;
+//            }
+//        }
+//        return max;
+//    }
 
     /*
     Generates line segments for the array of points by processing 4 at a time.
      */
     public LineSegment[] segments() {
-        int N = this.points.length;
-
-        ArrayList<Point> seen = new ArrayList<>();
-
-        for (int p = 0; p < N-2; p++) {
-            Point point1 = this.points[p];
-            if (seen.contains(point1)){
-                continue;
-            }
-
-            ArrayList<Point> pointsWithTheSameSlope = new ArrayList<>();
-            ArrayList<Point> sourcePoints = new ArrayList<>(Arrays.asList(this.points));
-            sourcePoints.sort(this.points[p].slopeOrder());
-
-
-            pointsWithTheSameSlope.add(point1);
-            System.out.println("Slope to point " + point1);
-            double slope = point1.slopeTo(this.points[p+1]);
-
-            for (int q = 0; q < N; q++) {
-                Point point2 = sourcePoints.get(q);
-
-                if (point1.equals(point2)
-                        || pointsWithTheSameSlope.contains((point2))
-                        || seen.contains(point2)) {
-                    continue;
-                }
-                double slope2 = point1.slopeTo(point2);
-                if (Math.abs(slope2 - slope) < 0.000001d) {
-                    pointsWithTheSameSlope.add(point2);
-                }
-            }
-            if (pointsWithTheSameSlope.size() < 2) {
-                continue;
-            }
-
-            Point start = findMinMaxPoint(pointsWithTheSameSlope)[0];
-            Point end = findMinMaxPoint(pointsWithTheSameSlope)[1];
-            if (!seen.contains(start) && !seen.contains(end)) {
-                LineSegment l = new LineSegment(start, end);
-                this.segments.add(l);
-                seen.addAll(pointsWithTheSameSlope);
-            }
-
-
-        }
-
-
-
-
-        LineSegment[] ls = new LineSegment[segments.size()];
-        for (int is = 0; is < segments.size(); is++) {
-            ls[is] = segments.get(is);
-            System.out.println(segments.get(is));
-        }
-        return ls;
+        return this.lineSegments;
 
     }
 }
